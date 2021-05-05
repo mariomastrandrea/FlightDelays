@@ -25,6 +25,8 @@ public class Airport {
 		this.timezoneOffset = timezoneOffset;
 	}
 
+	
+
 	public int getId() {
 		return id;
 	}
@@ -98,7 +100,8 @@ public class Airport {
 	}
 
 	@Override
-	public int hashCode() {
+	public int hashCode() 
+	{
 		final int prime = 31;
 		int result = 1;
 		result = prime * result + id;
@@ -106,7 +109,8 @@ public class Airport {
 	}
 
 	@Override
-	public boolean equals(Object obj) {
+	public boolean equals(Object obj) 
+	{
 		if (this == obj)
 			return true;
 		if (obj == null)
@@ -120,8 +124,9 @@ public class Airport {
 	}
 
 	@Override
-	public String toString() {
-		return "Airport [id=" + id + ", iataCode=" + iataCode + ", airportName=" + airportName + "]";
+	public String toString() 
+	{
+		return this.airportName;
 	}
 	
 }
