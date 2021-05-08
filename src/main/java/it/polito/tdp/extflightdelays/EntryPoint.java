@@ -22,7 +22,7 @@ public class EntryPoint extends Application
         FXMLController controller = loader.getController();
         controller.setModel(model);
         
-        stage.setTitle("FlightDelays");
+        stage.setTitle("ex6 - FlightDelays");
         stage.setResizable(false);
         stage.setScene(scene);
         stage.show();

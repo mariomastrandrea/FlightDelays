@@ -39,23 +39,23 @@
 						<Text strokeType="OUTSIDE" strokeWidth="0.0" text="# compagnie minimo" textAlignment="CENTER" wrappingWidth="143.22216796875" />
 						<Text strokeType="OUTSIDE" strokeWidth="0.0" text="Aeroporto di partenza" GridPane.rowIndex="1" />
                   <Text strokeType="OUTSIDE" strokeWidth="0.0" text="Aeroporto destinazione" GridPane.rowIndex="2" />
-						<TextField fx:id="compagnieMinimo" prefWidth="200.0" promptText="inserisci un numero intero..." GridPane.columnIndex="1">
+						<TextField fx:id="compagnieMinimo" onKeyTyped="#handleMinAirlinesTyping" prefWidth="200.0" promptText="inserisci un numero intero..." GridPane.columnIndex="1">
                      <GridPane.margin>
                         <Insets right="30.0" />
                      </GridPane.margin>
 						</TextField>
-						<ComboBox fx:id="cmbBoxAeroportoPartenza" prefWidth="360.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
+						<ComboBox fx:id="cmbBoxAeroportoPartenza" disable="true" onAction="#handleOriginAirportSelection" prefWidth="360.0" GridPane.columnIndex="1" GridPane.rowIndex="1">
                      <GridPane.margin>
                         <Insets right="30.0" />
                      </GridPane.margin>
 						</ComboBox>
-                  <ComboBox fx:id="cmbBoxAeroportoDestinazione" prefWidth="360.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
+                  <ComboBox fx:id="cmbBoxAeroportoDestinazione" disable="true" onAction="#handleDestinationAirportSelection" prefWidth="360.0" GridPane.columnIndex="1" GridPane.rowIndex="2">
                      <GridPane.margin>
                         <Insets right="30.0" />
                      </GridPane.margin>
                   </ComboBox>
-                  <Button fx:id="btnAnalizza" mnemonicParsing="false" onAction="#doAnalizzaAeroporti" prefWidth="150.0" text="Analizza aeroporti" GridPane.columnIndex="2" />
-						<Button fx:id="btnConnessione" mnemonicParsing="false" onAction="#doTestConnessione" prefWidth="150.0" text="Test Connessione" GridPane.columnIndex="2" GridPane.rowIndex="2" />
+                  <Button fx:id="btnAnalizza" disable="true" mnemonicParsing="false" onAction="#doAnalizzaAeroporti" prefWidth="150.0" text="Analizza aeroporti" GridPane.columnIndex="2" />
+						<Button fx:id="btnConnessione" disable="true" mnemonicParsing="false" onAction="#doTestConnessione" prefWidth="150.0" text="Test Connessione" GridPane.columnIndex="2" GridPane.rowIndex="2" />
                </children>
             </GridPane>
       		<TextArea fx:id="txtResult" editable="false" prefHeight="222.0" prefWidth="600.0" wrapText="true" />

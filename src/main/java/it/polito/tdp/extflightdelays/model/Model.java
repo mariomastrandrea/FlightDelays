@@ -32,12 +32,13 @@ public class Model
 		this.dao.loadAllAirports(this.airportsIdMap);
 	}
 	
-	public void creaGrafo(int x)
+	public void createGraph(int minAirlines)
 	{
 		this.grafo = new SimpleWeightedGraph<>(DefaultWeightedEdge.class);
 		
 		//aggiungo solo i vertici filtrati
-		Graphs.addAllVertices(this.grafo, this.dao.getVertici(airportsIdMap, x));
+		Set<Airport> vertices = this.dao.getVertici(airportsIdMap, minAirlines);
+		Graphs.addAllVertices(this.grafo, vertices);
 		
 		//aggiungo gli archi
 		Set<Rotta> rotte = this.dao.getRotte(airportsIdMap);
@@ -54,25 +55,23 @@ public class Model
 			if(this.grafo.containsEdge(a1, a2))
 			{
 				DefaultWeightedEdge edge = this.grafo.getEdge(a1, a2);
+				
 				double oldNumRotte = this.grafo.getEdgeWeight(edge);
 				double newNumRotte = oldNumRotte + (double)numRotte;
+				
 				this.grafo.setEdgeWeight(edge, newNumRotte);
 			}
 			else
 				Graphs.addEdgeWithVertices(this.grafo, a1, a2, numRotte);
 		}
-		
-		System.out.println("Grafo creato!");
-		System.out.println("# Vertici: " + this.grafo.vertexSet().size());
-		System.out.println("# Archi: " + this.grafo.edgeSet().size());
 	}
 
-	public Set<Airport> getVertici()
+	public Set<Airport> getVertices()
 	{
 		return this.grafo.vertexSet();
 	}
 	
-	public Set<DefaultWeightedEdge> getArchi()
+	public Set<DefaultWeightedEdge> getEdges()
 	{
 		return this.grafo.edgeSet();
 	}
@@ -82,7 +81,7 @@ public class Model
 		LinkedList<Airport> percorso = new LinkedList<>();
 		
 		BreadthFirstIterator<Airport, DefaultWeightedEdge> iterator = 
-				new BreadthFirstIterator<Airport, DefaultWeightedEdge>(this.grafo, origin); 
+												new BreadthFirstIterator<>(this.grafo, origin); 
 		
 		Map<Airport, Airport> visita = new HashMap<>();
 		visita.put(origin, null);

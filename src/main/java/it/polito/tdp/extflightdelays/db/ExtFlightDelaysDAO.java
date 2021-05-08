@@ -4,116 +4,52 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
 import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import it.polito.tdp.extflightdelays.model.Airline;
 import it.polito.tdp.extflightdelays.model.Airport;
-import it.polito.tdp.extflightdelays.model.Flight;
 import it.polito.tdp.extflightdelays.model.Rotta;
 
 public class ExtFlightDelaysDAO 
 {
-	public List<Airline> loadAllAirlines() 
-	{
-		String sql = "SELECT * from airlines";
-		List<Airline> result = new ArrayList<Airline>();
-
-		try 
-		{
-			Connection conn = ConnectDB.getConnection();
-			PreparedStatement st = conn.prepareStatement(sql);
-			ResultSet rs = st.executeQuery();
-
-			while (rs.next()) 
-			{
-				result.add(new Airline(rs.getInt("ID"), rs.getString("IATA_CODE"), rs.getString("AIRLINE")));
-			}
-
-			conn.close();
-			return result;
-		} 
-		catch (SQLException e) 
-		{
-			e.printStackTrace();
-			System.out.println("Errore dao in loadAllAirlines()");
-			throw new RuntimeException("Errore dao in loadAllAirlines()", e);
-		}
-	}
-
 	public void loadAllAirports(Map<Integer, Airport> airportsIdMap) 
 	{
 		String sql = "SELECT * FROM airports";
 
 		try 
 		{
-			Connection conn = ConnectDB.getConnection();
-			PreparedStatement st = conn.prepareStatement(sql);
-			ResultSet rs = st.executeQuery();
+			Connection connection = ConnectDB.getConnection();
+			PreparedStatement statement = connection.prepareStatement(sql);
+			ResultSet result = statement.executeQuery();
 
-			while (rs.next()) 
+			while (result.next()) 
 			{
-				int id = rs.getInt("ID");
+				int id = result.getInt("ID");
 				if(!airportsIdMap.containsKey(id))
 				{
-					Airport airport = new Airport(id, rs.getString("IATA_CODE"), rs.getString("AIRPORT"),
-							rs.getString("CITY"), rs.getString("STATE"), rs.getString("COUNTRY"), rs.getDouble("LATITUDE"),
-							rs.getDouble("LONGITUDE"), rs.getDouble("TIMEZONE_OFFSET"));
+					Airport airport = new Airport(id, result.getString("IATA_CODE"), result.getString("AIRPORT"),
+										result.getString("CITY"), result.getString("STATE"), 
+										result.getString("COUNTRY"), result.getDouble("LATITUDE"), 
+										result.getDouble("LONGITUDE"), result.getDouble("TIMEZONE_OFFSET"));
 							
 					airportsIdMap.put(id, airport);
-				}
-				
-			}
-			conn.close();
-		} 
-		catch (SQLException e) 
-		{
-			e.printStackTrace();
-			System.out.println("Errore connessione al database");
-			throw new RuntimeException("Error Connection Database");
-		}
-	}
-
-	public List<Flight> loadAllFlights() 
-	{
-		String sql = "SELECT * FROM flights";
-		List<Flight> result = new LinkedList<Flight>();
-
-		try 
-		{
-			Connection conn = ConnectDB.getConnection();
-			PreparedStatement st = conn.prepareStatement(sql);
-			ResultSet rs = st.executeQuery();
-
-			while (rs.next()) 
-			{
-				Flight flight = new Flight(rs.getInt("ID"), rs.getInt("AIRLINE_ID"), rs.getInt("FLIGHT_NUMBER"),
-						rs.getString("TAIL_NUMBER"), rs.getInt("ORIGIN_AIRPORT_ID"),
-						rs.getInt("DESTINATION_AIRPORT_ID"),
-						rs.getTimestamp("SCHEDULED_DEPARTURE_DATE").toLocalDateTime(), rs.getDouble("DEPARTURE_DELAY"),
-						rs.getDouble("ELAPSED_TIME"), rs.getInt("DISTANCE"),
-						rs.getTimestamp("ARRIVAL_DATE").toLocalDateTime(), rs.getDouble("ARRIVAL_DELAY"));
-				result.add(flight);
+				}	
 			}
 			
-			rs.close();
-			st.close();
-			conn.close();
-			return result;
+			result.close();
+			statement.close();
+			connection.close();
 		} 
-		catch (SQLException e) 
+		catch (SQLException sqle) 
 		{
-			e.printStackTrace();
-			System.out.println("Errore dao in loadAllFlights()");
-			throw new RuntimeException("Errore dao in loadAllFlights()", e);
+			sqle.printStackTrace();
+			System.out.println("Dao error in loadAllAirports()");
+			throw new RuntimeException("Dao error in loadAllAirports()", sqle);
 		}
 	}
 	
-	public Set<Airport> getVertici(Map<Integer,Airport> airportsIdMap, int x)
+	public Set<Airport> getVertici(Map<Integer,Airport> airportsIdMap, int  minAirlines)
 	{
 		String sql = String.format("%s %s %s %s %s",
 				"SELECT  a.id AS id",
@@ -126,26 +62,26 @@ public class ExtFlightDelaysDAO
 		
 		try 
 		{
-			Connection conn = ConnectDB.getConnection();
-			PreparedStatement st = conn.prepareStatement(sql);
-			st.setInt(1,x);
-			ResultSet rs = st.executeQuery();
+			Connection connection = ConnectDB.getConnection();
+			PreparedStatement statement = connection.prepareStatement(sql);
+			statement.setInt(1, minAirlines);
+			ResultSet queryResult = statement.executeQuery();
 
-			while (rs.next()) 
+			while (queryResult.next()) 
 			{
-				Airport a = airportsIdMap.get(rs.getInt("id"));
+				Airport a = airportsIdMap.get(queryResult.getInt("id"));
 				result.add(a);
 			}
 
-			rs.close();
-			st.close();
-			conn.close();
+			queryResult.close();
+			statement.close();
+			connection.close();
 		} 
-		catch (SQLException e) 
+		catch (SQLException sqle) 
 		{
-			e.printStackTrace();
-			System.out.println("Errore dao in getVertici()");
-			throw new RuntimeException("Errore dao in getVertici()", e);
+			sqle.printStackTrace();
+			System.out.println("Dao error in getVertici()");
+			throw new RuntimeException("Dao error in getVertici()", sqle);
 		}
 		return result;
 	}
@@ -153,42 +89,47 @@ public class ExtFlightDelaysDAO
 	public Set<Rotta> getRotte(Map<Integer,Airport> airportsIdMap)
 	{
 		String sql = String.format("%s %s %s",
-				"SELECT f.ORIGIN_AIRPORT_ID AS origin, f.DESTINATION_AIRPORT_ID AS destination, COUNT(*) AS n",
-				"FROM Flights f",
-				"GROUP BY f.ORIGIN_AIRPORT_ID, f.DESTINATION_AIRPORT_ID");
+				"SELECT ORIGIN_AIRPORT_ID AS a1, DESTINATION_AIRPORT_ID AS a2, COUNT(*) AS numFlights",
+				"FROM Flights",
+				"GROUP BY ORIGIN_AIRPORT_ID, DESTINATION_AIRPORT_ID");
 		
 		Set<Rotta> result = new HashSet<>();
 		
 		try 
 		{
-			Connection conn = ConnectDB.getConnection();
-			PreparedStatement st = conn.prepareStatement(sql);
-			ResultSet rs = st.executeQuery();
+			Connection connection = ConnectDB.getConnection();
+			PreparedStatement statement = connection.prepareStatement(sql);
+			ResultSet queryResult = statement.executeQuery();
 
-			while (rs.next()) 
+			while (queryResult.next()) 
 			{
-				Airport a1 = airportsIdMap.get(rs.getInt("origin"));
-				Airport a2 = airportsIdMap.get(rs.getInt("destination"));
-				int n = rs.getInt("n");
+				int id1 = queryResult.getInt("a1");
+				Airport a1 = airportsIdMap.get(id1);
+				
+				int id2 = queryResult.getInt("a2");
+				Airport a2 = airportsIdMap.get(id2);
+				
+				int numFlights = queryResult.getInt("numFlights");
 				
 				if(a1 == null || a2 == null)
 					throw new RuntimeException("DB non corretto: aeroporto non presente");
 				
-				Rotta r = new Rotta(a1, a2, n);
+				Rotta r = new Rotta(a1, a2, numFlights);
 				
 				result.add(r);
 			}
 
-			rs.close();
-			st.close();
-			conn.close();
+			queryResult.close();
+			statement.close();
+			connection.close();
 		} 
-		catch (SQLException e) 
+		catch (SQLException sqle) 
 		{
-			e.printStackTrace();
-			System.out.println("Errore dao in getRotte()");
-			throw new RuntimeException("Errore dao in getRotte()", e);
+			sqle.printStackTrace();
+			System.out.println("Dao error in getRotte()");
+			throw new RuntimeException("Dao error in getRotte()", sqle);
 		}
+		
 		return result;
 	}
 }

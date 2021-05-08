@@ -1,9 +1,11 @@
 package it.polito.tdp.extflightdelays;
 
 import java.net.URL;
+import java.util.Collection;
 import java.util.List;
 import java.util.ResourceBundle;
-import java.util.Set;
+
+import org.jgrapht.graph.DefaultWeightedEdge;
 
 import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Model;
@@ -13,11 +15,11 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.TextFormatter;
+import javafx.scene.input.KeyEvent;
 
 public class FXMLController 
 {
-	private Model model;
-
     @FXML 
     private ResourceBundle resources;
 
@@ -29,6 +31,7 @@ public class FXMLController
 
     @FXML 
     private TextField compagnieMinimo; 
+    private final int MAX_CHARS_COMPAGNIE = 2;
 
     @FXML 
     private ComboBox<Airport> cmbBoxAeroportoPartenza; 
@@ -41,36 +44,54 @@ public class FXMLController
 
     @FXML 
     private Button btnConnessione; 
+    
+	private Model model;
+
 
     @FXML
     void doAnalizzaAeroporti(ActionEvent event) 
     {
-    	int x;
+		String input = this.compagnieMinimo.getText();
+    	int minAirlines;
     	
     	try
 		{
-			String input = this.compagnieMinimo.getText();
-			x = Integer.parseInt(input);
+			minAirlines = Integer.parseInt(input);
 		}
 		catch(NumberFormatException nfe)
 		{
-			this.txtResult.setText("Inserisci un numero intero!");
+			this.txtResult.setText("Errore input: inserisci un numero intero!");
 			return;
 		}
     	
-    	this.model.creaGrafo(x);
+    	this.model.createGraph(minAirlines);
     	
-    	Set<Airport> allVertices = this.model.getVertici();
+    	Collection<Airport> allVertices = this.model.getVertices();
     	
+    	this.cmbBoxAeroportoPartenza.setValue(null);
+    	this.cmbBoxAeroportoPartenza.getItems().clear();
     	this.cmbBoxAeroportoPartenza.getItems().addAll(allVertices);
+    	this.cmbBoxAeroportoPartenza.setDisable(false);
+
+    	
+    	this.cmbBoxAeroportoDestinazione.setValue(null);
+    	this.cmbBoxAeroportoDestinazione.getItems().clear();
     	this.cmbBoxAeroportoDestinazione.getItems().addAll(allVertices);
+    	this.cmbBoxAeroportoDestinazione.setDisable(false);
+
+    	int numVertices = allVertices.size();
+    	Collection<DefaultWeightedEdge> allEdges = this.model.getEdges();
+    	int numEdges = allEdges.size();
     	
-    	this.txtResult.setText("Grafo creato!");
-    	this.txtResult.appendText("\n# Vertici: " + this.model.getVertici().size());
-    	this.txtResult.appendText("\n# Archi: " + this.model.getArchi().size());
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("Grafo creato!\n");
+    	sb.append("#Vertici: " + numVertices).append("\n");
+    	sb.append("#Archi: " + numEdges).append("\n\n");
     	
-    	for(var v : this.model.getArchi())
-    		this.txtResult.appendText("\n" + v);
+    	for(var v : allEdges)
+    		sb.append(v).append("\n");
+    	
+    	this.txtResult.setText(sb.toString());
     }
 
     @FXML
@@ -94,25 +115,89 @@ public class FXMLController
     		return;
     	}
     	
-    	this.txtResult.setText("Esiste un percorso dall'aeroporto \"" +
-    								origine + "\" all'aeroporto \"" + destinazione  +"\":\n\n");
+    	StringBuilder sb = new StringBuilder();
+    	sb.append("Esiste un percorso dall'aeroporto \"").append(origine);
+    	sb.append("\" all'aeroporto \"").append(destinazione).append("\":\n\n");
     	
     	int count = 1;
     	for(Airport a : percorso)
     	{
-    		this.txtResult.appendText((count++) + ") " + a.toString() + "\n");
+    		sb.append(count++).append(") ").append(a.toString()).append("\n");
+    	}
+    	
+    	this.txtResult.setText(sb.toString());
+    }
+    
+    @FXML
+    void handleOriginAirportSelection(ActionEvent event) 
+    {
+    	this.checkAirports();
+    }
+    
+    @FXML
+    void handleDestinationAirportSelection(ActionEvent event) 
+    {
+    	this.checkAirports();
+    }
+    
+    private void checkAirports()
+    {
+    	if( this.cmbBoxAeroportoPartenza.getValue() != null &&
+        	this.cmbBoxAeroportoDestinazione.getValue() != null)
+        {
+        	this.btnConnessione.setDisable(false);
+        }
+        else
+        {
+        	this.btnConnessione.setDisable(true);
+        }
+    }
+
+    @FXML
+    void handleMinAirlinesTyping(KeyEvent event) 
+    {
+    	if(this.compagnieMinimo.getText().isBlank())
+    	{
+    		this.btnAnalizza.setDisable(true);
+    	}
+    	else
+    	{
+    		this.btnAnalizza.setDisable(false);
     	}
     }
 
     @FXML 
     void initialize() 
     {
-        assert txtResult != null : "fx:id=\"txtResult\" was not injected: check your FXML file 'Scene.fxml'.";
-        assert compagnieMinimo != null : "fx:id=\"compagnieMinimo\" was not injected: check your FXML file 'Scene.fxml'.";
-        assert cmbBoxAeroportoPartenza != null : "fx:id=\"cmbBoxAeroportoPartenza\" was not injected: check your FXML file 'Scene.fxml'.";
-        assert cmbBoxAeroportoDestinazione != null : "fx:id=\"cmbBoxAeroportoDestinazione\" was not injected: check your FXML file 'Scene.fxml'.";
-        assert btnAnalizza != null : "fx:id=\"btnAnalizza\" was not injected: check your FXML file 'Scene.fxml'.";
-        assert btnConnessione != null : "fx:id=\"btnConnessione\" was not injected: check your FXML file 'Scene.fxml'.";
+        assert txtResult != null : "fx:id=\"txtResult\" was not injected: check your FXML file 'Scene_FlightDelays.fxml'.";
+        assert compagnieMinimo != null : "fx:id=\"compagnieMinimo\" was not injected: check your FXML file 'Scene_FlightDelays.fxml'.";
+        assert cmbBoxAeroportoPartenza != null : "fx:id=\"cmbBoxAeroportoPartenza\" was not injected: check your FXML file 'Scene_FlightDelays.fxml'.";
+        assert cmbBoxAeroportoDestinazione != null : "fx:id=\"cmbBoxAeroportoDestinazione\" was not injected: check your FXML file 'Scene_FlightDelays.fxml'.";
+        assert btnAnalizza != null : "fx:id=\"btnAnalizza\" was not injected: check your FXML file 'Scene_FlightDelays.fxml'.";
+        assert btnConnessione != null : "fx:id=\"btnConnessione\" was not injected: check your FXML file 'Scene_FlightDelays.fxml'.";
+    
+        this.compagnieMinimo.setTextFormatter(new TextFormatter<>(change -> 
+        {        	
+        	String text = change.getText();
+        	if(text == null || text.isEmpty())
+        		return change;
+        	
+        	int alreadyPresentChars = this.compagnieMinimo.getText().length();
+        	int maxNumCharsLeft = MAX_CHARS_COMPAGNIE - alreadyPresentChars;
+        	
+        	if(text.length() > maxNumCharsLeft)
+        		text = text.substring(0, maxNumCharsLeft);
+        	
+        	if(!text.matches("[\\d]+"))
+        		text = text.replaceAll("\\D", "");
+        	
+        	if(alreadyPresentChars == 0 && text.matches("(0)+(.)*"))
+        		text = text.replaceFirst("(0)+", "");
+        	
+        	change.setText(text);
+        	        	
+        	return change;
+        }));
     }
     
     public void setModel(Model model) 

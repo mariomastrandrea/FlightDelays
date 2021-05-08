@@ -6,7 +6,7 @@ public class Rotta
 	private final Airport a2;
 	private final int n;
 	
-	
+
 	public Rotta(Airport a1, Airport a2, int n)
 	{
 		this.a1 = a1;
@@ -66,7 +66,5 @@ public class Rotta
 			if (!a2.equals(other.a2))
 				return false;
 		return true;
-	}
-
-	
+	}	
 }

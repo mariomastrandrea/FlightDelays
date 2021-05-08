@@ -9,14 +9,16 @@ import com.zaxxer.hikari.HikariDataSource;
 public class ConnectDB 
 {
 	private static final String jdbcURL = "jdbc:mariadb://localhost/extflightdelays";
-	private static HikariDataSource ds;
-	
+	private static final String username = "root";
+	private static final String password = "root";
+	private static final HikariDataSource ds;
+
 	static
 	{
 		HikariConfig config = new HikariConfig();
 		config.setJdbcUrl(jdbcURL);
-		config.setUsername("root");
-		config.setPassword("root");
+		config.setUsername(username);
+		config.setPassword(password);
 		
 		// configurazione MySQL
 		config.addDataSourceProperty("cachePrepStmts", "true");
@@ -32,10 +34,10 @@ public class ConnectDB
 		{	
 			return ds.getConnection();
 		} 
-		catch (SQLException e) 
+		catch (SQLException sqle) 
 		{
-			System.err.println("Errore connessione al DB");
-			throw new RuntimeException(e);
+			System.err.println("DB Connection error at: " + jdbcURL);
+			throw new RuntimeException("DB Connection error at: " + jdbcURL, sqle);
 		}
 	}
 
